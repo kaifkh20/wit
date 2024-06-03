@@ -17,7 +17,7 @@ type GitRepository struct {
 	conf     *ini.File
 }
 
-func init_repo(gr GitRepository, path string, force bool) GitRepository {
+func (gr *GitRepository) init_repo(path string, force bool) {
 
 	if path == "" {
 		gr.worktree, _ = os.Getwd()
@@ -39,7 +39,7 @@ func init_repo(gr GitRepository, path string, force bool) GitRepository {
 		mkdir = true
 	}
 
-	cf, err := repo_file(gr, mkdir, "config")
+	cf, err := gr.repo_file(mkdir, "config")
 
 	if err != nil {
 		log.Fatal(err)
@@ -77,10 +77,9 @@ func init_repo(gr GitRepository, path string, force bool) GitRepository {
 		}
 	}
 	file.Close()
-	return gr
 }
 
-func repo_path(repo GitRepository, path []string) (string, error) {
+func (repo *GitRepository) repo_path(path []string) (string, error) {
 	var pathString strings.Builder
 	for _, p := range path {
 		pathString.Write([]byte(p))
@@ -88,18 +87,18 @@ func repo_path(repo GitRepository, path []string) (string, error) {
 	return filepath.Join(repo.gitdir, strings.TrimSpace(pathString.String())), nil
 }
 
-func repo_file(repo GitRepository, mkdir bool, path ...string) (string, error) {
+func (repo *GitRepository) repo_file(mkdir bool, path ...string) (string, error) {
 
-	if p := repo_dir(repo, mkdir, path[:len(path)-1]); p != "" {
+	if p := repo.repo_dir(mkdir, path[:len(path)-1]); p != "" {
 		os.Create(filepath.Join(p, path[len(path)-1]))
-		return repo_path(repo, path)
+		return repo.repo_path(path)
 	}
 	return "", nil
 }
 
-func repo_dir(repo GitRepository, mkdir bool, path []string) string {
+func (repo *GitRepository) repo_dir(mkdir bool, path []string) string {
 
-	pathString, _ := repo_path(repo, path)
+	pathString, _ := repo.repo_path(path)
 	fmt.Println(pathString)
 	if _, err := os.Stat(pathString); err != nil {
 		// mkdir = true
@@ -123,7 +122,7 @@ func repo_dir(repo GitRepository, mkdir bool, path []string) string {
 func repo_create(path string) GitRepository {
 	// fmt.Println(path)
 	repo := GitRepository{}
-	repo = init_repo(repo, path, true)
+	repo.init_repo(path, true)
 	// fmt.Println(repo, "Repo Initalized")
 	// fmt.Println()
 	if fi, err := os.Stat(repo.worktree); err != nil || !fi.IsDir() {
@@ -140,14 +139,14 @@ func repo_create(path string) GitRepository {
 	// 	os.Mkdir(repo.worktree, 1)
 	// }
 
-	repo_dir(repo, true, []string{"branches"})
-	repo_dir(repo, true, []string{"objects"})
-	repo_dir(repo, true, []string{"refs", "tags"})
-	repo_dir(repo, true, []string{"refs", "heads"})
+	repo.repo_dir(true, []string{"branches"})
+	repo.repo_dir(true, []string{"objects"})
+	repo.repo_dir(true, []string{"refs", "tags"})
+	repo.repo_dir(true, []string{"refs", "heads"})
 
 	fmt.Println("Created all refs and HEADS")
 
-	pS, err := repo_file(repo, false, "description")
+	pS, err := repo.repo_file(false, "description")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -162,7 +161,7 @@ func repo_create(path string) GitRepository {
 	}
 	file.Close()
 
-	pS, err = repo_file(repo, false, "HEAD")
+	pS, err = repo.repo_file(false, "HEAD")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -176,7 +175,7 @@ func repo_create(path string) GitRepository {
 	}
 	file.Close()
 
-	pS, err = repo_file(repo, false, "config")
+	pS, err = repo.repo_file(false, "config")
 	if err != nil {
 		log.Fatal(err)
 	}
