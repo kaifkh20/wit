@@ -19,18 +19,21 @@ type GitRepository struct {
 
 func (gr *GitRepository) init_repo(path string, force bool) {
 
+	// dr, _ := os.Getwd()
+
 	if path == "" {
-		gr.worktree, _ = os.Getwd()
+		gr.worktree = ""
+		gr.gitdir = filepath.Join("", ".git")
 	} else {
 		gr.worktree = path
+		gr.gitdir = filepath.Join("", ".git")
 	}
 
 	// fmt.Println(path)
-	gr.gitdir = filepath.Join(path, ".git")
 
-	// fmt.Println(gr.gitdir, filepath.IsLocal(gr.gitdir))
+	fmt.Println(gr.gitdir, filepath.IsLocal(gr.gitdir))
 
-	if !force || !filepath.IsLocal(gr.gitdir) {
+	if force || !filepath.IsLocal(gr.gitdir) {
 		log.Fatal("Not Git Repository")
 	}
 
@@ -83,12 +86,14 @@ func (repo *GitRepository) repo_path(path []string) (string, error) {
 	var pathString strings.Builder
 	for _, p := range path {
 		pathString.Write([]byte(p))
+		pathString.Write([]byte("/"))
 	}
+	fmt.Println(repo.gitdir, pathString.String())
 	return filepath.Join(repo.gitdir, strings.TrimSpace(pathString.String())), nil
 }
 
 func (repo *GitRepository) repo_file(mkdir bool, path ...string) (string, error) {
-
+	fmt.Println(path)
 	if p := repo.repo_dir(mkdir, path[:len(path)-1]); p != "" {
 		os.Create(filepath.Join(p, path[len(path)-1]))
 		return repo.repo_path(path)

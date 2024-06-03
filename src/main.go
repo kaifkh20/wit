@@ -21,5 +21,8 @@ func main() {
 	switch *cmnd {
 	case "init":
 		mod.Cmnd_Init(*arguments)
+	case "test":
+		mod.Test()
 	}
+
 }
