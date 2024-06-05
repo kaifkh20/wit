@@ -3,6 +3,8 @@ package mod
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	mod "wit/mod/objects"
 )
 
 type ObjectType int32
@@ -22,7 +25,8 @@ const (
 )
 
 type GitObject struct {
-	data string
+	header string
+	data   string
 }
 
 func (gobj *GitObject) init_object(repo GitRepository, data string) {
@@ -36,6 +40,7 @@ func (gobj *GitObject) deserialize(repo GitRepository) {
 }
 
 func (gobj *GitObject) serialize(repo GitRepository) {
+	mod.SerializeBlob(gobj.data)
 	fmt.Println("Unimplemented")
 }
 
@@ -110,6 +115,7 @@ func object_read(repo GitRepository, sha string) ObjectType {
 	}
 
 	switch objectType {
+
 	case "commit":
 		return 0
 	case "tree":
@@ -122,10 +128,43 @@ func object_read(repo GitRepository, sha string) ObjectType {
 	return -1
 }
 
+func (gobj *GitObject) obj_write(repo *GitRepository) string {
+	gobj.serialize(*repo)
+	result := gobj.header + " " + string(len(gobj.data)) + "\x00" + gobj.data
+	h := crypto.SHA1.New()
+	io.WriteString(h, result)
+	hBy := h.Sum(nil)
+	encS := hex.EncodeToString(hBy)
+
+	path, err := repo.repo_file(true, "objects", encS[:2], encS[2:])
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		file, err := os.OpenFile(path, os.O_WRONLY, os.ModeAppend)
+		if err != nil {
+			log.Fatal("Error writing object", err)
+		}
+		var b bytes.Buffer
+		w := zlib.NewWriter(&b)
+		w.Write([]byte(result))
+		w.Close()
+		file.Write(b.Bytes())
+		file.Close()
+	}
+
+	return encS
+}
+
+func object_find(repo GitRepository, name string, header string, follow bool) {
+	// return name
+}
+
 func Test() {
 	gr := GitRepository{}
 	gr.init_repo("", false)
+
 	// fmt.Println(gr.gitdir, gr.worktree)
-	objectType := object_read(gr, "e5fb83d83deb9adec6e93a4702145101740b84e7")
-	fmt.Println(objectType)
+	// objectType := object_read(gr, "e5fb83d83deb9adec6e93a4702145101740b84e7")
+	// fmt.Println(objectType)
 }

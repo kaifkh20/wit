@@ -26,14 +26,14 @@ func (gr *GitRepository) init_repo(path string, force bool) {
 		gr.gitdir = filepath.Join("", ".git")
 	} else {
 		gr.worktree = path
-		gr.gitdir = filepath.Join("", ".git")
+		gr.gitdir = filepath.Join(path, ".git")
 	}
 
 	// fmt.Println(path)
 
 	fmt.Println(gr.gitdir, filepath.IsLocal(gr.gitdir))
 
-	if force || !filepath.IsLocal(gr.gitdir) {
+	if !force || !filepath.IsLocal(gr.gitdir) {
 		log.Fatal("Not Git Repository")
 	}
 
@@ -128,8 +128,8 @@ func repo_create(path string) GitRepository {
 	// fmt.Println(path)
 	repo := GitRepository{}
 	repo.init_repo(path, true)
-	// fmt.Println(repo, "Repo Initalized")
-	// fmt.Println()
+	fmt.Println(repo, "Repo Initalized")
+	// fmt.Println(repo.worktree)
 	if fi, err := os.Stat(repo.worktree); err != nil || !fi.IsDir() {
 		log.Fatalf("%s is not a directory", path)
 	}
