@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"wit/mod"
 
@@ -23,18 +24,27 @@ func main() {
 	object := cat_file.String("o", "object", &argparse.Options{Required: true, Help: "The object to display"})
 
 	hash_obj := parser.NewCommand("hash-object", "Compute Object ID and optionally creates a blob from a file")
-	write_cmnd := hash_obj.String("w", "write", &argparse.Options{Help: "Actual write"})
+	// write_cmnd := hash_obj.String("w", "write", &argparse.Options{Help: "Actual write"})
 	type_cmnd_hash := hash_obj.Selector("t", "type", []string{"blob", "commit", "tag", "tree"}, &argparse.Options{Required: true, Help: "Specify type"})
+	hash_path := hash_obj.String("p", "path", &argparse.Options{Required: true, Help: "Actual Path"})
+
+	logCmnd := parser.NewCommand("log", "Display log of commit")
+	commitLog := logCmnd.String("c", "commit", &argparse.Options{Default: "HEAD", Help: "Commit to start at"})
 
 	err := parser.Parse(os.Args)
+
 	if err != nil {
-		fmt.Print(parser.Usage(err))
+		log.Fatal(parser.Usage(err))
 	}
 
 	if init.Happened() {
 		mod.Cmnd_Init(*path)
 	} else if cat_file.Happened() {
 		fmt.Print(cat_file.GetName(), *type_cmnd, *object)
+	} else if hash_obj.Happened() {
+		mod.Cmnd_Hash(true, *hash_path, *type_cmnd_hash)
+	} else if logCmnd.Happened() {
+		fmt.Println(*commitLog)
 	} else if test.Happened() {
 		mod.Test()
 	}

@@ -9,7 +9,7 @@ import (
 func Cmnd_Hash(write bool, path string, typeObj string) {
 	var repo GitRepository
 	if write {
-		// repo := repo_find()
+		repo = repo_find(".", true)
 	}
 	file, err := os.Open(path)
 

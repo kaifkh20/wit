@@ -5,6 +5,20 @@ import (
 	"strings"
 )
 
+type GitCommit struct {
+	header string
+	kvlm   map[string][]string
+}
+
+func (gcm *GitCommit) serialize() string {
+	return kvlm_serialize(gcm.kvlm)
+}
+
+func (gcm *GitCommit) deserialize(data string) {
+	var dct map[string][]string
+	gcm.kvlm = kvlm_parse(data, 0, dct)
+}
+
 func kvlm_parse(raw string, start int, dct map[string][]string) map[string][]string {
 	if len(dct) == 0 {
 		dct = make(map[string][]string)
@@ -39,10 +53,20 @@ func kvlm_parse(raw string, start int, dct map[string][]string) map[string][]str
 		dct[key] = []string{value}
 	}
 
-	return kvlm_parse(raw,end+1,dct)
+	return kvlm_parse(raw, end+1, dct)
 }
 
-
-func kvlm_serialize(dct map[string][]string){
-	
+func kvlm_serialize(dct map[string][]string) string {
+	result := ""
+	for k := range dct {
+		if k == "msg" {
+			continue
+		}
+		value := dct[k]
+		for _, v := range value {
+			result += k + " " + strings.ReplaceAll(v, "\n", "\n ") + "\n"
+		}
+		result += "\n" + dct["msg"][0] + "\n"
+	}
+	return result
 }

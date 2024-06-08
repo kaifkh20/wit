@@ -12,17 +12,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	mod "wit/mod/objects"
 )
 
-type ObjectType int32
-
-const (
-	COMMIT ObjectType = iota
-	TREE
-	TAG
-	BLOB
-)
+type ObjectTypes struct {
+	header string
+	GitCommit
+	GitBlob
+}
 
 type GitObject struct {
 	header string
@@ -40,11 +36,10 @@ func (gobj *GitObject) deserialize(repo GitRepository) {
 }
 
 func (gobj *GitObject) serialize(repo GitRepository) {
-	mod.SerializeBlob(gobj.data)
 	fmt.Println("Unimplemented")
 }
 
-func object_read(repo GitRepository, sha string) ObjectType {
+func object_read(repo GitRepository, sha string) ObjectTypes {
 	path, err := repo.repo_file(false, "objects", sha[:2], sha[2:])
 
 	if err != nil {
@@ -117,15 +112,15 @@ func object_read(repo GitRepository, sha string) ObjectType {
 	switch objectType {
 
 	case "commit":
-		return 0
+		return ObjectTypes{header: objectType, GitCommit: GitCommit{header: "commit", kvlm: make(map[string][]string)}}
 	case "tree":
-		return 1
+		return ObjectTypes{}
 	case "tag":
-		return 2
+		return ObjectTypes{}
 	case "blob":
-		return 3
+		return ObjectTypes{header: objectType, GitBlob: GitBlob{header: "blob", blobData: fileContentString}}
 	}
-	return -1
+	return ObjectTypes{header: "error"}
 }
 
 func (gobj *GitObject) obj_write(repo *GitRepository) string {
@@ -156,8 +151,8 @@ func (gobj *GitObject) obj_write(repo *GitRepository) string {
 	return encS
 }
 
-func object_find(repo GitRepository, name string, header string, follow bool) {
-	// return name
+func object_find(repo GitRepository, name string, header string, follow bool) string {
+	return name
 }
 
 func Test() {

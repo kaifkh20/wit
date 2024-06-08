@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gandarez/go-realpath"
 	"gopkg.in/ini.v1"
 )
 
@@ -129,7 +130,7 @@ func repo_create(path string) GitRepository {
 	repo := GitRepository{}
 	repo.init_repo(path, true)
 	fmt.Println(repo, "Repo Initalized")
-	// fmt.Println(repo.worktree)
+	fmt.Println(repo.gitdir, repo.worktree)
 	if fi, err := os.Stat(repo.worktree); err != nil || !fi.IsDir() {
 		log.Fatalf("%s is not a directory", path)
 	}
@@ -200,6 +201,34 @@ func repo_create(path string) GitRepository {
 
 	file.Close()
 	return repo
+}
+
+func repo_find(path string, required bool) GitRepository {
+	path, err := realpath.Realpath(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err = os.Stat(filepath.Join(path, ".git")); err != nil {
+		log.Fatal("No such directory", err)
+	} else {
+		var gr GitRepository
+		gr.init_repo(path, false)
+		return gr
+	}
+
+	parent, err := realpath.Realpath(filepath.Join(path, ".."))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if parent == path {
+		if required {
+			log.Fatal("No git directory in root.")
+		}
+	}
+	return repo_find(parent, required)
 }
 
 func repo_default_config() *ini.File {
