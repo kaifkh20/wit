@@ -11,4 +11,5 @@ require (
 	github.com/augustoroman/hexdump v0.0.0-20231204223853-3694912baadb // indirect
 	github.com/gandarez/go-realpath v1.0.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
+	github.com/wk8/go-ordered-map v1.0.0 // indirect
 )

@@ -26,18 +26,20 @@ func log_graphviz(repo GitRepository, sha string, seen map[string]bool) {
 
 	commit := objt.GitCommit
 	// short_hash := sha[:8]
-	mess := commit.kvlm["msg"][0]
+	mv, _ := commit.kvlm.Get("mess")
+	mess := mv.([]string)
 
-	if strings.Contains(mess, "\n") {
-		mess = mess[:strings.Index(mess, "\n")]
+	if strings.Contains(mess[0], "\n") {
+		mess = mess[:strings.Index(mess[0], "\n")]
 	}
 	fmt.Printf(" c_%s [label= \\ %s: %s \\]", sha, sha[0:7], mess)
 
-	if _, ok := commit.kvlm["parent"]; !ok {
+	if _, ok := commit.kvlm.Get("parent"); !ok {
 		return
 	}
 
-	parents := commit.kvlm["parent"]
+	pv, _ := commit.kvlm.Get("parent")
+	parents := pv.([]string)
 
 	for _, p := range parents {
 		fmt.Printf("c_%s -> c_%s;", sha, p)

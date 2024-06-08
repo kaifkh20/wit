@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	orderedmap "github.com/wk8/go-ordered-map"
 )
 
 type ObjectTypes struct {
@@ -112,7 +114,7 @@ func object_read(repo GitRepository, sha string) ObjectTypes {
 	switch objectType {
 
 	case "commit":
-		return ObjectTypes{header: objectType, GitCommit: GitCommit{header: "commit", kvlm: make(map[string][]string)}}
+		return ObjectTypes{header: objectType, GitCommit: GitCommit{header: "commit", kvlm: *orderedmap.New()}}
 	case "tree":
 		return ObjectTypes{}
 	case "tag":

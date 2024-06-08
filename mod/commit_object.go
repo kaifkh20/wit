@@ -3,11 +3,13 @@ package mod
 import (
 	"log"
 	"strings"
+
+	orderedmap "github.com/wk8/go-ordered-map"
 )
 
 type GitCommit struct {
 	header string
-	kvlm   map[string][]string
+	kvlm   orderedmap.OrderedMap
 }
 
 func (gcm *GitCommit) serialize() string {
@@ -15,13 +17,13 @@ func (gcm *GitCommit) serialize() string {
 }
 
 func (gcm *GitCommit) deserialize(data string) {
-	var dct map[string][]string
+	var dct orderedmap.OrderedMap
 	gcm.kvlm = kvlm_parse(data, 0, dct)
 }
 
-func kvlm_parse(raw string, start int, dct map[string][]string) map[string][]string {
-	if len(dct) == 0 {
-		dct = make(map[string][]string)
+func kvlm_parse(raw string, start int, dct orderedmap.OrderedMap) orderedmap.OrderedMap {
+	if dct.Len() == 0 {
+		dct = *orderedmap.New()
 	}
 	spc := strings.Index(raw, " ")
 	nl := strings.Index(raw, "\n")
@@ -30,7 +32,8 @@ func kvlm_parse(raw string, start int, dct map[string][]string) map[string][]str
 		if nl == start {
 			log.Fatal("nl not equals start")
 		}
-		dct["msg"] = []string{raw[start-1:]}
+		dct.Set("msg", []string{raw[start-1:]})
+		// dct["msg"] = []string{raw[start-1:]}
 		return dct
 	}
 
@@ -47,26 +50,35 @@ func kvlm_parse(raw string, start int, dct map[string][]string) map[string][]str
 
 	value := strings.ReplaceAll(raw[spc+1:end], "\n ", "\n")
 
-	if val, ok := dct[key]; ok {
-		dct[key] = append(val, value)
+	if val, ok := dct.Get(key); ok {
+		if val != nil {
+			strArr, _ := val.([]string)
+			dct.Set(key, append(strArr, value))
+		}
+		// dct[key] = append(val, value)
 	} else {
-		dct[key] = []string{value}
+		dct.Set(key, []string{value})
 	}
 
 	return kvlm_parse(raw, end+1, dct)
 }
 
-func kvlm_serialize(dct map[string][]string) string {
+func kvlm_serialize(dct orderedmap.OrderedMap) string {
 	result := ""
-	for k := range dct {
-		if k == "msg" {
+	for kv := dct.Oldest(); kv != nil; kv = kv.Next() {
+		if kv.Key == "msg" {
 			continue
 		}
-		value := dct[k]
-		for _, v := range value {
-			result += k + " " + strings.ReplaceAll(v, "\n", "\n ") + "\n"
+		value := kv.Value
+		valueA := value.([]string)
+		for _, v := range valueA {
+			key := kv.Key.(string)
+			result += key + " " + strings.ReplaceAll(v, "\n", "\n ") + "\n"
 		}
-		result += "\n" + dct["msg"][0] + "\n"
+
 	}
+	value, _ := dct.Get("msg")
+	msgV := value.([]string)
+	result += "\n" + msgV[0] + "\n"
 	return result
 }
