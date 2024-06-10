@@ -20,6 +20,7 @@ type ObjectTypes struct {
 	header string
 	GitCommit
 	GitBlob
+	GitTree
 }
 
 type GitObject struct {
@@ -116,7 +117,7 @@ func object_read(repo GitRepository, sha string) ObjectTypes {
 	case "commit":
 		return ObjectTypes{header: objectType, GitCommit: GitCommit{header: "commit", kvlm: *orderedmap.New()}}
 	case "tree":
-		return ObjectTypes{}
+		return ObjectTypes{header: objectType, GitTree: GitTree{header: "tree", items: []GitTreeLeaf{}}}
 	case "tag":
 		return ObjectTypes{}
 	case "blob":
