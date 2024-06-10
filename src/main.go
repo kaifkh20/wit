@@ -31,6 +31,14 @@ func main() {
 	logCmnd := parser.NewCommand("log", "Display log of commit")
 	commitLog := logCmnd.String("c", "commit", &argparse.Options{Default: "HEAD", Help: "Commit to start at"})
 
+	ls_tree := parser.NewCommand("ls-tree", "Pretty print a tree object")
+	recursive := ls_tree.Flag("r", "recursive", &argparse.Options{Required: false, Help: "Recurse into sub-trees", Default: nil})
+	tree := ls_tree.String("t", "tree", &argparse.Options{Required: true, Help: "A tree object"})
+
+	chckout := parser.NewCommand("checkout", "Checkout a commit inside of a directory")
+	commit := chckout.String("c", "commit", &argparse.Options{Help: "Commit to checkout to"})
+	path_c := chckout.String("p", "path", &argparse.Options{Help: "The Empty Directory to checkout on"})
+
 	err := parser.Parse(os.Args)
 
 	if err != nil {
@@ -45,6 +53,10 @@ func main() {
 		mod.Cmnd_Hash(true, *hash_path, *type_cmnd_hash)
 	} else if logCmnd.Happened() {
 		fmt.Println(*commitLog)
+	} else if ls_tree.Happened() {
+		fmt.Println(*recursive, *tree)
+	} else if chckout.Happened() {
+		fmt.Print(*commit, *path_c)
 	} else if test.Happened() {
 		mod.Test()
 	}
