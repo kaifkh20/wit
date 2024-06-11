@@ -1,9 +1,11 @@
 package mod
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	orderedmap "github.com/wk8/go-ordered-map"
@@ -43,7 +45,7 @@ func ref_resolve(repo GitRepository, ref string) (string, error) {
 
 func ref_list(repo GitRepository, path string) orderedmap.OrderedMap {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		path = repo.repo_dir(true, []string{path})
+		path = repo.repo_dir(true, []string{"refs"})
 	}
 	ret := orderedmap.New()
 
@@ -64,4 +66,33 @@ func ref_list(repo GitRepository, path string) orderedmap.OrderedMap {
 		}
 	}
 	return *ret
+}
+
+func show_ref(repo GitRepository, refs orderedmap.OrderedMap, with_hash bool, prefix string) {
+	for pair := refs.Oldest(); pair != nil; pair = pair.Next() {
+		if reflect.TypeOf(pair.Value) == reflect.TypeOf("") {
+			val := pair.Value.(string)
+			result := ""
+			if with_hash {
+				result += val + " "
+			}
+			if prefix != "" {
+				result += prefix + "/"
+			}
+			result += pair.Key.(string)
+			fmt.Println(result)
+		} else {
+			if prefix != "" {
+				prefix += "/"
+			}
+			prefix += pair.Key.(string)
+			show_ref(repo, pair.Value.(orderedmap.OrderedMap), with_hash, prefix)
+		}
+	}
+}
+
+func Ref_Command() {
+	repo := repo_find("", false)
+	refs := ref_list(repo, "")
+	show_ref(repo, refs, true, "refs")
 }

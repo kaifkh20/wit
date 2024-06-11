@@ -39,6 +39,8 @@ func main() {
 	commit := chckout.String("c", "commit", &argparse.Options{Help: "Commit to checkout to"})
 	path_c := chckout.String("p", "path", &argparse.Options{Help: "The Empty Directory to checkout on"})
 
+	show_ref := parser.NewCommand("show-ref", "List References")
+
 	err := parser.Parse(os.Args)
 
 	if err != nil {
@@ -57,6 +59,8 @@ func main() {
 		fmt.Println(*recursive, *tree)
 	} else if chckout.Happened() {
 		fmt.Print(*commit, *path_c)
+	} else if show_ref.Happened() {
+		mod.Ref_Command()
 	} else if test.Happened() {
 		mod.Test()
 	}
