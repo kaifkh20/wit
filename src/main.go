@@ -41,6 +41,11 @@ func main() {
 
 	show_ref := parser.NewCommand("show-ref", "List References")
 
+	tag := parser.NewCommand("tag", "List and create tags")
+	a := tag.Flag("a", "-a", &argparse.Options{Help: "Whether to create a tag object"})
+	name := tag.String("n", "name", &argparse.Options{Help: "The new tag's name"})
+	object_tag := tag.String("o", "object", &argparse.Options{Default: "HEAD", Help: "The object tag will point to"})
+
 	err := parser.Parse(os.Args)
 
 	if err != nil {
@@ -61,6 +66,8 @@ func main() {
 		fmt.Print(*commit, *path_c)
 	} else if show_ref.Happened() {
 		mod.Ref_Command()
+	} else if tag.Happened() {
+		fmt.Println(*a, *name, *object_tag)
 	} else if test.Happened() {
 		mod.Test()
 	}
