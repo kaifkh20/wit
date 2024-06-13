@@ -12,7 +12,10 @@ func cmnd_ls_tree(tree string, recursive bool) {
 }
 
 func ls_tree(repo GitRepository, tree string, recursive bool, prefix string) {
-	sha := object_find(repo, tree, "tree", true)
+	sha, err := object_find(repo, tree, "tree", true)
+	if err != nil {
+		log.Fatal(err)
+	}
 	obj := object_read(repo, sha)
 	for _, items := range obj.items {
 		var type_ string

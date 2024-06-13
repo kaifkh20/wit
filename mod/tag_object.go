@@ -36,7 +36,11 @@ func cmnd_tag(name string, object string, create_tag_object bool) {
 }
 
 func tag_create(repo GitRepository, name string, object string, create_tag_object bool) {
-	sha := object_find(repo, "", object, false)
+	sha, err := object_find(repo, "", object, false)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if create_tag_object {
 		tag := GitTag{GitCommit: GitCommit{header: "tag"}}

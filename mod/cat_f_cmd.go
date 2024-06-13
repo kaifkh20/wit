@@ -11,7 +11,11 @@ func cmnd_cat_file(object string, typeObj string, args ...string) {
 }
 
 func cat_file(repo GitRepository, typeObj string, header string) {
-	obj := object_read(repo, object_find(repo, "", typeObj, true))
+	obj_f, err := object_find(repo, "", typeObj, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	obj := object_read(repo, obj_f)
 	if obj.header == "error" {
 		log.Fatal("Unknow Type Object")
 	}

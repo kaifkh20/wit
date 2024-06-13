@@ -10,7 +10,11 @@ func cmnd_log(commit string, args ...string) {
 	repo := repo_find(".", true)
 	fmt.Print("digraph witlog{")
 	fmt.Print("\t node [shape=rect]")
-	log_graphviz(repo, object_find(repo, "", commit, false), map[string]bool{})
+	obj_f, err := object_find(repo, "", commit, false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log_graphviz(repo, obj_f, map[string]bool{})
 }
 
 func log_graphviz(repo GitRepository, sha string, seen map[string]bool) {

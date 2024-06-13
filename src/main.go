@@ -46,6 +46,9 @@ func main() {
 	name := tag.String("n", "name", &argparse.Options{Help: "The new tag's name"})
 	object_tag := tag.String("o", "object", &argparse.Options{Default: "HEAD", Help: "The object tag will point to"})
 
+	rev_parse := parser.NewCommand("rev-parse", "Parse revision identifiers")
+	wt := rev_parse.Selector("wt", "wyag-type", []string{"blob", "commit", "tag", "tree"}, &argparse.Options{Help: "Specify the expected type"})
+	name = rev_parse.String("n", "name", &argparse.Options{Help: "The name to parse"})
 	err := parser.Parse(os.Args)
 
 	if err != nil {
@@ -68,6 +71,8 @@ func main() {
 		mod.Ref_Command()
 	} else if tag.Happened() {
 		fmt.Println(*a, *name, *object_tag)
+	} else if rev_parse.Happened() {
+		fmt.Println(*wt, *name)
 	} else if test.Happened() {
 		mod.Test()
 	}

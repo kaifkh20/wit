@@ -9,7 +9,11 @@ import (
 
 func chck_cmnd(commit string, path string, args ...string) {
 	repo := repo_find("", false)
-	obj := object_read(repo, object_find(repo, commit, "", true))
+	obj_f, err := object_find(repo, commit, "", true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	obj := object_read(repo, obj_f)
 	si, _ := obj.kvlm.Get("tree")
 	tree_val := si.(string)
 	if obj.header == "commit" {

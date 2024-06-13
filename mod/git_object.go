@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -121,7 +122,7 @@ func object_read(repo GitRepository, sha string) ObjectTypes {
 	case "tree":
 		return ObjectTypes{header: objectType, GitTree: GitTree{header: "tree", items: []GitTreeLeaf{}}}
 	case "tag":
-		return ObjectTypes{}
+		return ObjectTypes{header: objectType, GitTag: GitTag{GitCommit: GitCommit{header: "commit", kvlm: *orderedmap.New()}}}
 	case "blob":
 		return ObjectTypes{header: objectType, GitBlob: GitBlob{header: "blob", blobData: fileContentString}}
 	}
@@ -157,8 +158,87 @@ func (gobj *GitObject) obj_write(repo *GitRepository) string {
 	return encS
 }
 
-func object_find(repo GitRepository, name string, header string, follow bool) string {
-	return name
+func obj_resolve(repo GitRepository, name string) ([]string, error) {
+	candidates := []string{}
+	hashRE, err := regexp.Compile("^[0-9A-Fa-f]{4,40}$")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if strings.TrimSpace(name) == "" {
+		return []string{}, fmt.Errorf("Empty name")
+	}
+	if name == "HEAD" {
+		ref, err := ref_resolve(repo, "HEAD")
+		if err != nil {
+			log.Fatal("Error occured in resolving HEAD")
+		}
+		return []string{ref}, nil
+	}
+	if hashRE.Match([]byte(name)) {
+		name = strings.ToLower(name)
+		prefix := name[0:2]
+		path := repo.repo_dir(false, []string{"objects"})
+		rem := name[2:]
+		enteries, err := os.ReadDir(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, f := range enteries {
+			if strings.HasPrefix(f.Name(), rem) {
+				candidates = append(candidates, prefix+f.Name())
+			}
+		}
+	}
+	as_tag, err := ref_resolve(repo, "refs/tags/"+name)
+	if err != nil {
+		log.Fatal("Error here object resolve")
+	}
+	candidates = append(candidates, as_tag)
+	as_branch, err := ref_resolve(repo, "refs/heads/"+name)
+	if err != nil {
+		log.Fatal("Error here in object resolve heads")
+	}
+	candidates = append(candidates, as_branch)
+	return candidates, nil
+
+}
+
+func object_find(repo GitRepository, name string, header string, follow bool) (string, error) {
+	sha, err := obj_resolve(repo, name)
+	if err != nil {
+		log.Fatal("No such reference", name, err)
+	}
+
+	if len(sha) > 1 {
+		log.Fatalf("Ambigious reference %s: Candidates are:\n - %s", name, strings.Join(sha, "\n -"))
+	}
+
+	sha_s := sha[0]
+
+	if header == "" {
+		return sha_s, nil
+	}
+
+	for {
+		obj := object_read(repo, sha_s)
+		if obj.header == header {
+			return sha_s, nil
+		}
+		if !follow {
+			return "", nil
+		}
+		if obj.header == "tag" {
+			val, _ := obj.kvlm.Get("object")
+			sha_s = val.(string)
+		} else if obj.header == "commit" && header == "tree" {
+			val, _ := obj.kvlm.Get("tree")
+			sha_s = val.(string)
+		} else {
+			return "", nil
+		}
+	}
+
+	// return name
 }
 
 func Test() {
