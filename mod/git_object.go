@@ -21,11 +21,13 @@ type ObjectTypes struct {
 	GitCommit
 	GitBlob
 	GitTree
+	GitTag
 }
 
 type GitObject struct {
 	header string
 	data   string
+	ObjectTypes
 }
 
 func (gobj *GitObject) init_object(repo GitRepository, data string) {
@@ -127,6 +129,7 @@ func object_read(repo GitRepository, sha string) ObjectTypes {
 }
 
 func (gobj *GitObject) obj_write(repo *GitRepository) string {
+
 	gobj.serialize(*repo)
 	result := gobj.header + " " + string(len(gobj.data)) + "\x00" + gobj.data
 	h := crypto.SHA1.New()
